@@ -111,23 +111,38 @@
 /* Mobile: até 768px */
 @media (max-width: 768px) {
   
-  /* Correção do Header - Badges em linha única */
-  header .flex.items-center.gap-3 {
+  /* Correção do Header - Layout flexível */
+  header > div {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
     gap: 0.5rem !important;
     flex-wrap: nowrap !important;
   }
 
-  /* Badges menores no mobile */
-  header span[class*="rounded-full"] {
-    font-size: 0.65rem !important;
-    padding: 0.35rem 0.6rem !important;
-    white-space: nowrap;
+  /* Container dos badges - permite wrap se necessário */
+  header .flex.items-center.gap-3 {
+    gap: 0.4rem !important;
+    flex-wrap: wrap !important;
+    flex: 1 !important;
+    max-width: 65% !important;
   }
 
-  /* Timer maior e mais visível */
+  /* Badges menores no mobile */
+  header span[class*="rounded-full"] {
+    font-size: 0.6rem !important;
+    padding: 0.3rem 0.5rem !important;
+    white-space: nowrap !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Timer - garantir espaço e não cortar */
   header .text-red-400 {
-    font-size: 1.25rem !important;
-    flex-shrink: 0;
+    font-size: 1.1rem !important;
+    flex-shrink: 0 !important;
+    min-width: 65px !important;
+    text-align: right !important;
+    white-space: nowrap !important;
   }
 
   /* Título principal - quebra melhor */
@@ -217,15 +232,21 @@
     padding: 0.75rem 0.5rem !important;
   }
 
-  /* Badges ainda menores */
-  header span[class*="rounded-full"] {
-    font-size: 0.6rem !important;
-    padding: 0.3rem 0.5rem !important;
+  /* Container dos badges - mais espaço para timer */
+  header .flex.items-center.gap-3 {
+    max-width: 60% !important;
   }
 
-  /* Timer */
+  /* Badges ainda menores */
+  header span[class*="rounded-full"] {
+    font-size: 0.55rem !important;
+    padding: 0.25rem 0.45rem !important;
+  }
+
+  /* Timer - garantir visibilidade completa */
   header .text-red-400 {
-    font-size: 1.1rem !important;
+    font-size: 1rem !important;
+    min-width: 70px !important;
   }
 
   /* Título */
