@@ -1,9 +1,15 @@
 import { useState, useEffect } from 'react';
+import PurchaseConfirmation from './components/PurchaseConfirmation';
+import { useScrollProgress, useDynamicCounters } from './hooks/useGamification';
+import './styles/animations.css';
 
 function App() {
   const [timeLeft, setTimeLeft] = useState(900);
   const [showModal, setShowModal] = useState(false);
   const [showSticky, setShowSticky] = useState(false);
+  const [showPurchaseConfirmation, setShowPurchaseConfirmation] = useState(false);
+  const { scrollProgress } = useScrollProgress();
+  const { spotsLeft, viewers, buyers } = useDynamicCounters(12, 200, 80);
   const [userData] = useState({
     timeSeparation: '1-4 SEMANAS',
     currentSituation: 'ME IGNORA',
@@ -93,16 +99,32 @@ function App() {
     <div className="bg-black min-h-screen text-white overflow-x-hidden">
       <header className="sticky top-0 z-50 bg-black/95 backdrop-blur border-b border-yellow-500/30 p-4">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <span className="bg-yellow-500 text-black font-black text-xs md:text-sm px-3 py-1.5 rounded-full">
-            ✨ ANÁLISIS NIVEL 2 DESBLOQUEADO
-          </span>
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="bg-yellow-500 text-black font-black text-xs md:text-sm px-3 py-1.5 rounded-full">
+              ✨ ANÁLISIS NIVEL 2 DESBLOQUEADO
+            </span>
+            <span className="bg-red-500/20 text-red-300 font-bold text-xs px-3 py-1 rounded-full border border-red-500">
+              🔥 {spotsLeft} spots restantes
+            </span>
+            <span className="bg-green-500/20 text-green-300 font-bold text-xs px-3 py-1 rounded-full border border-green-500 hidden md:inline-block">
+              👥 {viewers} viendo ahora
+            </span>
+          </div>
           <div className="text-red-400 font-black text-lg md:text-2xl animate-pulse-custom">
             ⏰ {formatTime(timeLeft)}
           </div>
         </div>
       </header>
 
-      <section className="pt-24 pb-12 px-4 fade-in">
+      {/* Barra de Progresso Visual */}
+      <div className="fixed top-0 left-0 right-0 h-1 bg-gray-800 z-[60]">
+        <div 
+          className="h-full bg-gradient-to-r from-yellow-500 via-green-500 to-green-600 transition-all duration-300"
+          style={{ width: `${scrollProgress}%` }}
+        />
+      </div>
+
+      <section className="pt-24 pb-12 px-4 fade-in-up">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-white mb-6 leading-tight">
             ESPERA... ANTES DE ACCEDER AL PLAN DE 21 DÍAS
@@ -141,7 +163,7 @@ function App() {
         </div>
       </section>
 
-      <section className="bg-gradient-to-b from-black to-red-950/20 px-4 py-12">
+      <section className="bg-gradient-to-b from-black to-red-950/20 px-4 py-12 fade-in-up">
         <div className="max-w-4xl mx-auto">
           <div className="bg-gradient-to-br from-red-500/20 via-orange-600/10 to-red-600/10 border-2 border-red-500 rounded-2xl p-6 md:p-10 shadow-2xl shadow-red-500/20">
             <div className="text-5xl md:text-6xl mb-6 text-center">⚠️</div>
@@ -152,15 +174,15 @@ function App() {
               <p className="text-xl md:text-2xl font-black text-red-200 text-center leading-snug">Pero NO te da las PALABRAS EXACTAS para cada situación</p>
             </div>
             <div className="grid md:grid-cols-3 gap-4 mb-8">
-              <div className="bg-black/40 border border-red-500/30 rounded-lg p-5 text-center">
+              <div className="bg-black/40 border border-red-500/30 rounded-lg p-5 text-center hover-scale">
                 <div className="text-4xl mb-3">😰</div>
                 <p className="text-base md:text-lg text-white font-bold mb-2">¿Qué digo si me ignora?</p>
               </div>
-              <div className="bg-black/40 border border-red-500/30 rounded-lg p-5 text-center">
+              <div className="bg-black/40 border border-red-500/30 rounded-lg p-5 text-center hover-scale">
                 <div className="text-4xl mb-3">😔</div>
                 <p className="text-base md:text-lg text-white font-bold mb-2">¿Qué digo si respondió frío?</p>
               </div>
-              <div className="bg-black/40 border border-red-500/30 rounded-lg p-5 text-center">
+              <div className="bg-black/40 border border-red-500/30 rounded-lg p-5 text-center hover-scale">
                 <div className="text-4xl mb-3">😨</div>
                 <p className="text-base md:text-lg text-white font-bold mb-2">¿Qué digo si está con otra persona?</p>
               </div>
@@ -173,7 +195,7 @@ function App() {
         </div>
       </section>
 
-      <section className="px-4 py-16 bg-gradient-to-b from-yellow-950/10 via-red-950/20 to-black">
+      <section className="px-4 py-16 bg-gradient-to-b from-yellow-950/10 via-red-950/20 to-black fade-in-up">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl md:text-5xl font-black text-white mb-6 text-center leading-tight">
             Tu ex está en la Fase 2 del proceso neurológico
@@ -186,7 +208,7 @@ function App() {
           <div className="w-24 h-1 bg-gradient-to-r from-yellow-500 to-red-500 mx-auto mb-12"></div>
 
           <div className="grid md:grid-cols-2 gap-6 md:gap-8 mb-12">
-            <div className="bg-gradient-to-br from-red-900/40 to-red-800/20 border-2 border-red-500 rounded-2xl p-6 md:p-8">
+            <div className="bg-gradient-to-br from-red-900/40 to-red-800/20 border-2 border-red-500 rounded-2xl p-6 md:p-8 hover-scale">
               <div className="text-4xl md:text-5xl mb-4">❌</div>
               <div className="text-red-400 font-black text-lg md:text-xl mb-4">SIN ACELERADOR:</div>
               <p className="text-white text-base md:text-lg leading-relaxed">
@@ -197,7 +219,7 @@ function App() {
               </p>
             </div>
 
-            <div className="bg-gradient-to-br from-green-900/40 to-green-800/20 border-2 border-green-500 rounded-2xl p-6 md:p-8">
+            <div className="bg-gradient-to-br from-green-900/40 to-green-800/20 border-2 border-green-500 rounded-2xl p-6 md:p-8 hover-scale">
               <div className="text-4xl md:text-5xl mb-4">✅</div>
               <div className="text-green-400 font-black text-lg md:text-xl mb-4">CON ACELERADOR:</div>
               <p className="text-white text-base md:text-lg leading-relaxed">
@@ -217,7 +239,7 @@ function App() {
         </div>
       </section>
 
-      <section className="px-4 py-16 bg-gradient-to-b from-black to-yellow-950/20">
+      <section className="px-4 py-16 bg-gradient-to-b from-black to-yellow-950/20 fade-in-up">
         <div className="max-w-4xl mx-auto">
           <span className="bg-yellow-500 text-black font-black text-sm md:text-base px-6 py-2 rounded-full inline-block mb-8">
             🎯 OFERTA EXCLUSIVA - SOLO PARA TI
@@ -234,7 +256,7 @@ function App() {
           <div className="w-32 h-1 bg-gradient-to-r from-yellow-500 to-green-500 mb-12"></div>
 
           <div className="space-y-4 mb-12">
-            <div className="bg-gradient-to-r from-white/5 to-white/0 border-l-4 border-green-500 p-5 md:p-6 rounded-r-xl hover:from-white/10 transition-all duration-300">
+            <div className="bg-gradient-to-r from-white/5 to-white/0 border-l-4 border-green-500 p-5 md:p-6 rounded-r-xl hover:from-white/10 transition-all duration-300 hover-scale">
               <div className="flex items-start gap-4">
                 <span className="text-3xl text-green-400">✅</span>
                 <div>
@@ -248,7 +270,7 @@ function App() {
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-white/5 to-white/0 border-l-4 border-green-500 p-5 md:p-6 rounded-r-xl hover:from-white/10 transition-all duration-300">
+            <div className="bg-gradient-to-r from-white/5 to-white/0 border-l-4 border-green-500 p-5 md:p-6 rounded-r-xl hover:from-white/10 transition-all duration-300 hover-scale">
               <div className="flex items-start gap-4">
                 <span className="text-3xl text-green-400">✅</span>
                 <div>
@@ -262,7 +284,7 @@ function App() {
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-white/5 to-white/0 border-l-4 border-green-500 p-5 md:p-6 rounded-r-xl hover:from-white/10 transition-all duration-300">
+            <div className="bg-gradient-to-r from-white/5 to-white/0 border-l-4 border-green-500 p-5 md:p-6 rounded-r-xl hover:from-white/10 transition-all duration-300 hover-scale">
               <div className="flex items-start gap-4">
                 <span className="text-3xl text-green-400">✅</span>
                 <div>
@@ -276,7 +298,7 @@ function App() {
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-white/5 to-white/0 border-l-4 border-green-500 p-5 md:p-6 rounded-r-xl hover:from-white/10 transition-all duration-300">
+            <div className="bg-gradient-to-r from-white/5 to-white/0 border-l-4 border-green-500 p-5 md:p-6 rounded-r-xl hover:from-white/10 transition-all duration-300 hover-scale">
               <div className="flex items-start gap-4">
                 <span className="text-3xl text-green-400">✅</span>
                 <div>
@@ -290,7 +312,7 @@ function App() {
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-white/5 to-white/0 border-l-4 border-green-500 p-5 md:p-6 rounded-r-xl hover:from-white/10 transition-all duration-300">
+            <div className="bg-gradient-to-r from-white/5 to-white/0 border-l-4 border-green-500 p-5 md:p-6 rounded-r-xl hover:from-white/10 transition-all duration-300 hover-scale">
               <div className="flex items-start gap-4">
                 <span className="text-3xl text-green-400">✅</span>
                 <div>
@@ -304,7 +326,7 @@ function App() {
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-white/5 to-white/0 border-l-4 border-green-500 p-5 md:p-6 rounded-r-xl hover:from-white/10 transition-all duration-300">
+            <div className="bg-gradient-to-r from-white/5 to-white/0 border-l-4 border-green-500 p-5 md:p-6 rounded-r-xl hover:from-white/10 transition-all duration-300 hover-scale">
               <div className="flex items-start gap-4">
                 <span className="text-3xl text-green-400">✅</span>
                 <div>
@@ -318,7 +340,7 @@ function App() {
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-white/5 to-white/0 border-l-4 border-green-500 p-5 md:p-6 rounded-r-xl hover:from-white/10 transition-all duration-300">
+            <div className="bg-gradient-to-r from-white/5 to-white/0 border-l-4 border-green-500 p-5 md:p-6 rounded-r-xl hover:from-white/10 transition-all duration-300 hover-scale">
               <div className="flex items-start gap-4">
                 <span className="text-3xl text-green-400">✅</span>
                 <div>
@@ -341,7 +363,7 @@ function App() {
         </div>
       </section>
 
-      <section className="px-4 py-16 bg-gradient-to-b from-yellow-950/20 via-green-950/10 to-black">
+      <section className="px-4 py-16 bg-gradient-to-b from-yellow-950/20 via-green-950/10 to-black fade-in-up">
         <div className="max-w-5xl mx-auto">
           <div className="bg-gradient-to-br from-yellow-900/20 to-green-900/20 border-2 border-yellow-500/50 rounded-3xl p-8 md:p-12 shadow-2xl">
             <h2 className="text-3xl md:text-4xl font-black text-white mb-10 text-center leading-tight">
@@ -349,13 +371,13 @@ function App() {
             </h2>
 
             <div className="grid md:grid-cols-2 gap-8 mb-10">
-              <div className="text-center p-6 bg-green-900/30 rounded-2xl border border-green-500/30">
+              <div className="text-center p-6 bg-green-900/30 rounded-2xl border border-green-500/30 hover-scale">
                 <div className="text-6xl md:text-7xl font-black text-green-400 mb-3">89%</div>
                 <div className="text-xl md:text-2xl text-white font-bold mb-2">Usaron el Acelerador</div>
                 <div className="text-base md:text-lg text-green-200">Reconquista promedio: 9-14 días</div>
               </div>
 
-              <div className="text-center p-6 bg-red-900/30 rounded-2xl border border-red-500/30">
+              <div className="text-center p-6 bg-red-900/30 rounded-2xl border border-red-500/30 hover-scale">
                 <div className="text-6xl md:text-7xl font-black text-red-400 mb-3">11%</div>
                 <div className="text-xl md:text-2xl text-white font-bold mb-2">Solo Plan 21 Días</div>
                 <div className="text-base md:text-lg text-red-200">Reconquista promedio: 18-28 días</div>
@@ -377,7 +399,7 @@ function App() {
         </div>
       </section>
 
-      <section className="px-4 py-16 bg-gradient-to-b from-black to-yellow-950/30">
+      <section className="px-4 py-16 bg-gradient-to-b from-black to-yellow-950/30 fade-in-up">
         <div className="max-w-3xl mx-auto text-center">
           <div className="text-4xl md:text-5xl text-gray-500 line-through mb-4 font-bold">
             $67
@@ -387,7 +409,7 @@ function App() {
             🔥 70% DE DESCUENTO
           </div>
 
-          <div className="text-7xl md:text-8xl lg:text-9xl font-black text-yellow-400 mb-6 drop-shadow-2xl">
+          <div className="text-7xl md:text-8xl lg:text-9xl font-black text-yellow-400 mb-6 drop-shadow-2xl pulse-soft">
             $17
           </div>
 
@@ -407,7 +429,26 @@ function App() {
         </div>
       </section>
 
-      <section className="px-4 py-16 bg-gradient-to-b from-yellow-950/30 to-black">
+      {/* Contador de Atividade em Tempo Real */}
+      <div className="fixed bottom-24 right-4 bg-black/90 backdrop-blur-lg border-2 border-green-500 rounded-xl p-4 z-40 shadow-2xl hidden md:block fade-in-up">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+          <span className="text-white font-bold text-sm">Actividad en vivo</span>
+        </div>
+        <div className="space-y-2 text-xs">
+          <div className="text-gray-300">
+            👥 <span className="text-white font-semibold">{viewers}</span> personas viendo
+          </div>
+          <div className="text-gray-300">
+            ✅ <span className="text-green-400 font-semibold">{buyers}</span> compraron hoy
+          </div>
+          <div className="text-gray-300">
+            🔥 <span className="text-red-400 font-semibold">{spotsLeft}</span> spots restantes
+          </div>
+        </div>
+      </div>
+
+      <section className="px-4 py-16 bg-gradient-to-b from-yellow-950/30 to-black fade-in-up">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-black text-white mb-8 text-center leading-tight">
             Accede al Acelerador 72H AHORA:
@@ -417,24 +458,24 @@ function App() {
             ✨ Compra en 1 clic (sin rellenar datos de nuevo)
           </p>
 
-          <div className="bg-gradient-to-br from-green-900/20 to-green-800/10 border-4 border-green-500 rounded-3xl p-8 md:p-12 shadow-2xl shadow-green-500/30 mb-8">
+          <div className="bg-gradient-to-br from-green-900/20 to-green-800/10 border-4 border-green-500 rounded-3xl p-8 md:p-12 shadow-2xl shadow-green-500/30 mb-8 hover-glow">
             <div id="hotmart-sales-funnel" className="min-h-[200px] flex items-center justify-center">
               <p className="text-gray-400 text-center">Cargando checkout seguro...</p>
             </div>
           </div>
 
           <div className="grid md:grid-cols-3 gap-4 mt-8">
-            <div className="bg-white/5 rounded-xl p-4 text-center">
+            <div className="bg-white/5 rounded-xl p-4 text-center hover-scale">
               <div className="text-3xl mb-2">🔒</div>
               <p className="text-sm md:text-base text-gray-300 font-semibold">Pago 100% Seguro</p>
             </div>
 
-            <div className="bg-white/5 rounded-xl p-4 text-center">
+            <div className="bg-white/5 rounded-xl p-4 text-center hover-scale">
               <div className="text-3xl mb-2">⚡</div>
               <p className="text-sm md:text-base text-gray-300 font-semibold">Acceso Inmediato</p>
             </div>
 
-            <div className="bg-white/5 rounded-xl p-4 text-center">
+            <div className="bg-white/5 rounded-xl p-4 text-center hover-scale">
               <div className="text-3xl mb-2">🛡️</div>
               <p className="text-sm md:text-base text-gray-300 font-semibold">Garantía 30 Días</p>
             </div>
@@ -449,7 +490,7 @@ function App() {
 
             <button
               onClick={handleDecline}
-              className="bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold text-base md:text-lg py-4 px-8 rounded-xl border-2 border-gray-600 transition-all duration-300 inline-block"
+              className="bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold text-base md:text-lg py-4 px-8 rounded-xl border-2 border-gray-600 transition-all duration-300 inline-block hover-scale"
             >
               ❌ No, prefiero continuar sin el Acelerador
             </button>
@@ -461,8 +502,7 @@ function App() {
         </div>
       </section>
 
-      {/* Seção 8: Garantia */}
-      <section className="px-4 py-16 bg-gradient-to-b from-black to-green-950/20">
+      <section className="px-4 py-16 bg-gradient-to-b from-black to-green-950/20 fade-in-up">
         <div className="max-w-4xl mx-auto">
           <span className="bg-green-500 text-black font-black text-xl md:text-2xl px-8 py-4 rounded-full inline-block mb-10 shadow-lg shadow-green-500/50">
             🛡️ GARANTÍA DE 30 DÍAS
@@ -512,6 +552,11 @@ function App() {
         </div>
       </section>
 
+      {/* Confirmação de Compra Gamificada */}
+      {showPurchaseConfirmation && (
+        <PurchaseConfirmation onClose={() => setShowPurchaseConfirmation(false)} />
+      )}
+
       {showModal && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
           <div className="bg-gradient-to-br from-red-900 via-red-800 to-black border-4 border-red-500 rounded-3xl p-8 md:p-12 max-w-2xl w-full shadow-2xl shadow-red-500/50 animate-fade-in">
@@ -557,7 +602,7 @@ function App() {
             <div className="flex flex-col md:flex-row gap-4">
               <button
                 onClick={backToOffer}
-                className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black font-black text-lg md:text-xl py-5 px-8 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg shadow-yellow-500/50"
+                className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black font-black text-lg md:text-xl py-5 px-8 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg shadow-yellow-500/50 ripple-effect"
               >
                 ✅ No, quiero el Acelerador 72H
               </button>
@@ -589,7 +634,7 @@ function App() {
 
             <button
               onClick={scrollToWidget}
-              className="bg-green-500 hover:bg-green-600 text-black font-black text-base md:text-xl py-4 px-8 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg shadow-green-500/50 w-full md:w-auto"
+              className="bg-green-500 hover:bg-green-600 text-black font-black text-base md:text-xl py-4 px-8 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg shadow-green-500/50 w-full md:w-auto hover-glow ripple-effect"
             >
               ✅ QUIERO EL ACELERADOR AHORA
             </button>
