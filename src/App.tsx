@@ -402,7 +402,7 @@ function App() {
           </div>
 
           <div className="text-2xl md:text-3xl font-black text-green-400">
-            Ahorras $40 AHORA
+            Ahorras $50 AHORA
           </div>
         </div>
       </section>
@@ -528,7 +528,7 @@ function App() {
             <div className="space-y-3 mb-8 max-w-lg mx-auto">
               <div className="flex items-start gap-3 bg-black/40 p-4 rounded-lg">
                 <span className="text-2xl text-red-400">❌</span>
-                <p className="text-base md:text-lg text-white">70% de descuento ($40 de ahorro)</p>
+                <p className="text-base md:text-lg text-white">70% de descuento ($50 de ahorro)</p>
               </div>
 
               <div className="flex items-start gap-3 bg-black/40 p-4 rounded-lg">
