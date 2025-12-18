@@ -98,23 +98,31 @@ function App() {
   return (
     <div className="bg-black min-h-screen text-white overflow-x-hidden">
       <header className="sticky top-0 z-50 bg-black/95 backdrop-blur border-b border-yellow-500/30 p-4">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center gap-3 flex-wrap">
-            <span className="bg-yellow-500 text-black font-black text-xs md:text-sm px-3 py-1.5 rounded-full">
-              ✨ ANÁLISIS NIVEL 2 DESBLOQUEADO
-            </span>
-            <span className="bg-red-500/20 text-red-300 font-bold text-xs px-3 py-1 rounded-full border border-red-500">
-              🔥 {spotsLeft} spots restantes
-            </span>
-            <span className="bg-green-500/20 text-green-300 font-bold text-xs px-3 py-1 rounded-full border border-green-500 hidden md:inline-block">
-              👥 {viewers} viendo ahora
-            </span>
-          </div>
-          <div className="text-red-400 font-black text-lg md:text-2xl animate-pulse-custom">
-            ⏰ {formatTime(timeLeft)}
-          </div>
-        </div>
-      </header>
+  <div className="flex flex-col gap-2 max-w-7xl mx-auto">
+    {/* Linha 1: Compra Confirmada + Timer */}
+    <div className="flex items-center justify-between">
+      <span className="bg-green-500 text-black font-black text-xs md:text-sm px-3 py-1.5 rounded-full flex items-center gap-1.5 animate-pulse">
+        ✅ COMPRA CONFIRMADA
+      </span>
+      <div className="text-red-400 font-black text-lg md:text-2xl animate-pulse-custom">
+        ⏰ {formatTime(timeLeft)}
+      </div>
+    </div>
+
+    {/* Linha 2: Análisis Nivel 2 + Contadores */}
+    <div className="flex items-center gap-3 flex-wrap">
+      <span className="bg-yellow-500 text-black font-black text-xs md:text-sm px-3 py-1.5 rounded-full">
+        ✨ ANÁLISIS NIVEL 2 DESBLOQUEADO
+      </span>
+      <span className="bg-red-500/20 text-red-300 font-bold text-xs px-3 py-1 rounded-full border border-red-500">
+        🔥 {spotsLeft} spots restantes
+      </span>
+      <span className="bg-green-500/20 text-green-300 font-bold text-xs px-3 py-1 rounded-full border border-green-500 hidden md:inline-block">
+        👥 {viewers} viendo ahora
+      </span>
+    </div>
+  </div>
+</header>
 
       {/* Barra de Progresso Visual */}
       <div className="fixed top-0 left-0 right-0 h-1 bg-gray-800 z-[60]">
