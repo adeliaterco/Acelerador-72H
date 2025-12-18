@@ -436,7 +436,7 @@ function App() {
 
             <div className="bg-white/5 rounded-xl p-4 text-center">
               <div className="text-3xl mb-2">🛡️</div>
-              <p className="text-sm md:text-base text-gray-300 font-semibold">Garantía 7 Días</p>
+              <p className="text-sm md:text-base text-gray-300 font-semibold">Garantía 30 Días</p>
             </div>
           </div>
 
@@ -465,7 +465,7 @@ function App() {
       <section className="px-4 py-16 bg-gradient-to-b from-black to-green-950/20">
         <div className="max-w-4xl mx-auto">
           <span className="bg-green-500 text-black font-black text-xl md:text-2xl px-8 py-4 rounded-full inline-block mb-10 shadow-lg shadow-green-500/50">
-            🛡️ GARANTÍA DE 7 DÍAS
+            🛡️ GARANTÍA DE 30 DÍAS
           </span>
 
           <h2 className="text-3xl md:text-4xl font-black text-white mb-8 text-center leading-tight">
@@ -474,7 +474,7 @@ function App() {
 
           <div className="bg-gradient-to-br from-green-900/30 to-green-800/20 border-2 border-green-500 rounded-3xl p-8 md:p-12">
             <p className="text-xl md:text-2xl text-gray-300 mb-6 leading-relaxed text-center">
-              Si en 7 días sientes que el Acelerador no te dio las respuestas exactas que necesitabas, te devuelvo el 100% del valor del Acelerador.
+              Si en 30 días sientes que el Acelerador no te dio las respuestas exactas que necesitabas, te devuelvo el 100% del valor del Acelerador.
             </p>
 
             <p className="text-2xl md:text-3xl font-black text-green-400 mb-6 text-center">
