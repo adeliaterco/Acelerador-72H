@@ -4,17 +4,16 @@ import { useScrollProgress, useDynamicCounters } from './hooks/useGamification';
 import './styles/animations.css';
 
 function App() {
-  const [timeLeft, setTimeLeft] = useState(900);
+  const [timeLeft, setTimeLeft] = useState(900); // Timer principal (15 min)
+  const [unlockedIn, setUnlockedIn] = useState(180); // Timer de desbloqueio (3 min)
+  const [isUnlocked, setIsUnlocked] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showSticky, setShowSticky] = useState(false);
   const [showPurchaseConfirmation, setShowPurchaseConfirmation] = useState(false);
-  const [videoTime, setVideoTime] = useState(0);
-  const [showHotmartWidget, setShowHotmartWidget] = useState(false);
   const [unlockNotificationShown, setUnlockNotificationShown] = useState(false);
   const { scrollProgress } = useScrollProgress();
   const { spotsLeft, viewers, buyers } = useDynamicCounters(12, 200, 80);
-  const hotmartRef = useRef(null);
-  const audioRef = useRef(null);
+  const widgetRef = useRef(null);
 
   const [userData] = useState({
     timeSeparation: '1-4 SEMANAS',
@@ -27,6 +26,7 @@ function App() {
     console.log('📊 Dados do usuário:', userData);
   }, [userData]);
 
+  // Timer principal (15 minutos)
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft(prev => {
@@ -41,6 +41,36 @@ function App() {
     return () => clearInterval(timer);
   }, []);
 
+  // Timer de desbloqueio (3 minutos)
+  useEffect(() => {
+    const unlockedTimer = setInterval(() => {
+      setUnlockedIn(prev => {
+        if (prev <= 1) {
+          setIsUnlocked(true);
+          setUnlockNotificationShown(true);
+          
+          // Toca som de notificação
+          playUnlockSound();
+          
+          // Scroll automático para o widget
+          setTimeout(() => {
+            (widgetRef.current as any)?.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center'
+            });
+          }, 500);
+
+          console.log('📊 Tracking: 3 minutos atingidos - Seções desbloqueadas');
+          clearInterval(unlockedTimer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(unlockedTimer);
+  }, []);
+
   useEffect(() => {
     const handleScroll = () => {
       setShowSticky(window.scrollY > 1000);
@@ -50,48 +80,12 @@ function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Detector de progresso do vídeo Vturb
-  useEffect(() => {
-    const checkVideoProgress = setInterval(() => {
-      const vturb = document.querySelector('vturb-smartplayer');
-      if (vturb && (window as any).smartplayer) {
-        try {
-          const currentTime = (window as any).smartplayer.currentTime || 0;
-          setVideoTime(currentTime);
-
-          // Quando atinge 3 minutos (180 segundos)
-          if (currentTime >= 180 && !showHotmartWidget && !unlockNotificationShown) {
-            setShowHotmartWidget(true);
-            setUnlockNotificationShown(true);
-            
-            // Toca som de notificação
-            playUnlockSound();
-            
-            // Scroll automático para o widget
-            setTimeout(() => {
-              hotmartRef.current?.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
-              });
-            }, 500);
-
-            console.log('📊 Tracking: Vídeo atingiu 3 minutos - Widget desbloqueado');
-          }
-        } catch (error) {
-          console.log('⚠️ Erro ao detectar progresso do vídeo');
-        }
-      }
-    }, 500);
-
-    return () => clearInterval(checkVideoProgress);
-  }, [showHotmartWidget, unlockNotificationShown]);
-
   useEffect(() => {
     const script = document.createElement('script');
     script.src = 'https://checkout.hotmart.com/lib/hotmart-checkout-elements.js';
     script.async = true;
     script.onload = () => {
-      if ((window as any).checkoutElements && showHotmartWidget) {
+      if ((window as any).checkoutElements && isUnlocked) {
         (window as any).checkoutElements.init('salesFunnel').mount('#hotmart-sales-funnel');
         console.log('✅ Hotmart Widget carregado com sucesso');
       }
@@ -106,7 +100,7 @@ function App() {
         document.body.removeChild(script);
       }
     };
-  }, [showHotmartWidget]);
+  }, [isUnlocked]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -115,7 +109,6 @@ function App() {
   };
 
   const playUnlockSound = () => {
-    // Som de notificação suave (usando Web Audio API)
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
@@ -213,7 +206,7 @@ function App() {
           </div>
 
           {/* VTURB SMARTPLAYER */}
-          <div className="bg-black rounded-2xl overflow-hidden shadow-2xl shadow-green-500/20 mb-12 border-2 border-green-500/30">
+          <div className="bg-black rounded-2xl overflow-hidden shadow-2xl shadow-green-500/20 mb-8 border-2 border-green-500/30">
             <vturb-smartplayer 
               id="vid-69479a3bb31bcf401dd8d6a2" 
               style={{
@@ -232,27 +225,40 @@ function App() {
             </script>
           </div>
 
-          {/* NOTIFICAÇÃO DE DESBLOQUEIO */}
-          {showHotmartWidget && (
-            <div className="mb-12 animate-fade-in">
-              <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl p-6 md:p-8 shadow-2xl shadow-green-500/50 text-center">
-                <div className="text-5xl md:text-6xl mb-4">🎉</div>
-                <h2 className="text-2xl md:text-3xl font-black text-black mb-2">
-                  ✅ OFERTA DESBLOQUEADA!
-                </h2>
-                <p className="text-lg md:text-xl text-black/90 font-semibold">
-                  Tu oferta exclusiva está lista. Desplázate hacia abajo para completar tu compra.
-                </p>
-              </div>
+          {/* TIMER DE DESBLOQUEIO ABAIXO DO VÍDEO */}
+          <div className="bg-gradient-to-r from-orange-900/40 to-yellow-900/40 border-2 border-orange-500 rounded-xl p-6 mb-12 text-center">
+            <p className="text-base md:text-lg text-gray-300 mb-3">
+              Faltam para desbloquear a oferta exclusiva:
+            </p>
+            <div className="text-4xl md:text-5xl font-black text-orange-400">
+              {formatTime(unlockedIn)}
             </div>
-          )}
+            <p className="text-sm md:text-base text-orange-300 mt-3">
+              Assista o vídeo até o final para desbloquear sua oferta exclusiva
+            </p>
+          </div>
 
         </div>
       </section>
 
-      {/* WIDGET HOTMART - APARECE AOS 3 MINUTOS */}
-      {showHotmartWidget && (
-        <section className="px-4 py-16 bg-gradient-to-b from-black to-yellow-950/30 fade-in-up" ref={hotmartRef}>
+      {/* NOTIFICAÇÃO DE DESBLOQUEIO */}
+      {isUnlocked && (
+        <div className="mb-12 px-4 animate-fade-in">
+          <div className="max-w-4xl mx-auto bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl p-6 md:p-8 shadow-2xl shadow-green-500/50 text-center">
+            <div className="text-5xl md:text-6xl mb-4">🎉</div>
+            <h2 className="text-2xl md:text-3xl font-black text-black mb-2">
+              ✅ OFERTA DESBLOQUEADA!
+            </h2>
+            <p className="text-lg md:text-xl text-black/90 font-semibold">
+              Tu oferta exclusiva está lista. Desplázate hacia abajo para completar tu compra.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* WIDGET HOTMART - APARECE APÓS 3 MINUTOS */}
+      {isUnlocked && (
+        <section className="px-4 py-16 bg-gradient-to-b from-black to-yellow-950/30 fade-in-up" ref={widgetRef}>
           <div className="max-w-3xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-black text-white mb-8 text-center leading-tight">
               Accede al Acelerador 72H AHORA:
@@ -307,36 +313,38 @@ function App() {
         </section>
       )}
 
-      {/* SEÇÃO DE PREÇO - SEMPRE VISÍVEL */}
-      <section className="px-4 py-16 bg-gradient-to-b from-black to-yellow-950/30 fade-in-up">
-        <div className="max-w-3xl mx-auto text-center">
-          <div className="text-4xl md:text-5xl text-gray-500 line-through mb-4 font-bold">
-            $67
-          </div>
+      {/* SEÇÃO DE PREÇO - APARECE APÓS 3 MINUTOS */}
+      {isUnlocked && (
+        <section className="px-4 py-16 bg-gradient-to-b from-black to-yellow-950/30 fade-in-up">
+          <div className="max-w-3xl mx-auto text-center">
+            <div className="text-4xl md:text-5xl text-gray-500 line-through mb-4 font-bold">
+              $67
+            </div>
 
-          <div className="bg-red-500 text-white font-black text-xl md:text-2xl px-8 py-3 rounded-full inline-block mb-6 shadow-lg shadow-red-500/50 animate-pulse-custom">
-            🔥 70% DE DESCUENTO
-          </div>
+            <div className="bg-red-500 text-white font-black text-xl md:text-2xl px-8 py-3 rounded-full inline-block mb-6 shadow-lg shadow-red-500/50 animate-pulse-custom">
+              🔥 70% DE DESCUENTO
+            </div>
 
-          <div className="text-7xl md:text-8xl lg:text-9xl font-black text-yellow-400 mb-6 drop-shadow-2xl pulse-soft">
-            $17
-          </div>
+            <div className="text-7xl md:text-8xl lg:text-9xl font-black text-yellow-400 mb-6 drop-shadow-2xl pulse-soft">
+              $17
+            </div>
 
-          <p className="text-xl md:text-2xl text-yellow-200 font-semibold mb-8">
-            Pago único. Acceso de por vida.
-          </p>
-
-          <div className="bg-gradient-to-r from-red-900/40 to-orange-900/40 border-2 border-red-500 rounded-2xl p-6 mb-8">
-            <p className="text-lg md:text-xl text-red-200 font-bold leading-relaxed">
-              ⏰ Solo en esta página. Solo en los próximos {formatTime(timeLeft)} minutos
+            <p className="text-xl md:text-2xl text-yellow-200 font-semibold mb-8">
+              Pago único. Acceso de por vida.
             </p>
-          </div>
 
-          <div className="text-2xl md:text-3xl font-black text-green-400">
-            Ahorras $50 AHORA
+            <div className="bg-gradient-to-r from-red-900/40 to-orange-900/40 border-2 border-red-500 rounded-2xl p-6 mb-8">
+              <p className="text-lg md:text-xl text-red-200 font-bold leading-relaxed">
+                ⏰ Solo en esta página. Solo en los próximos {formatTime(timeLeft)} minutos
+              </p>
+            </div>
+
+            <div className="text-2xl md:text-3xl font-black text-green-400">
+              Ahorras $50 AHORA
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* CONTADOR DE ATIVIDADE */}
       <div className="fixed bottom-24 right-4 bg-black/90 backdrop-blur-lg border-2 border-green-500 rounded-xl p-4 z-40 shadow-2xl hidden md:block fade-in-up">
@@ -357,56 +365,58 @@ function App() {
         </div>
       </div>
 
-      {/* SEÇÃO DE GARANTIA */}
-      <section className="px-4 py-16 bg-gradient-to-b from-black to-green-950/20 fade-in-up">
-        <div className="max-w-4xl mx-auto">
-          <span className="bg-green-500 text-black font-black text-xl md:text-2xl px-8 py-4 rounded-full inline-block mb-10 shadow-lg shadow-green-500/50">
-            🛡️ GARANTÍA DE 30 DÍAS
-          </span>
+      {/* SEÇÃO DE GARANTIA - APARECE APÓS 3 MINUTOS */}
+      {isUnlocked && (
+        <section className="px-4 py-16 bg-gradient-to-b from-black to-green-950/20 fade-in-up">
+          <div className="max-w-4xl mx-auto">
+            <span className="bg-green-500 text-black font-black text-xl md:text-2xl px-8 py-4 rounded-full inline-block mb-10 shadow-lg shadow-green-500/50">
+              🛡️ GARANTÍA DE 30 DÍAS
+            </span>
 
-          <h2 className="text-3xl md:text-4xl font-black text-white mb-8 text-center leading-tight">
-            Prueba el Acelerador sin ningún riesgo
-          </h2>
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-8 text-center leading-tight">
+              Prueba el Acelerador sin ningún riesgo
+            </h2>
 
-          <div className="bg-gradient-to-br from-green-900/30 to-green-800/20 border-2 border-green-500 rounded-3xl p-8 md:p-12">
-            <p className="text-xl md:text-2xl text-gray-300 mb-6 leading-relaxed text-center">
-              Si en 30 días sientes que el Acelerador no te dio las respuestas exactas que necesitabas, te devuelvo el 100% del valor del Acelerador.
-            </p>
+            <div className="bg-gradient-to-br from-green-900/30 to-green-800/20 border-2 border-green-500 rounded-3xl p-8 md:p-12">
+              <p className="text-xl md:text-2xl text-gray-300 mb-6 leading-relaxed text-center">
+                Si en 30 días sientes que el Acelerador no te dio las respuestas exactas que necesitabas, te devuelvo el 100% del valor del Acelerador.
+              </p>
 
-            <p className="text-2xl md:text-3xl font-black text-green-400 mb-6 text-center">
-              Sin preguntas. Sin complicaciones.
-            </p>
+              <p className="text-2xl md:text-3xl font-black text-green-400 mb-6 text-center">
+                Sin preguntas. Sin complicaciones.
+              </p>
 
-            <p className="text-lg md:text-xl text-gray-400 text-center italic">
-              (Y aún así mantienes acceso al Plan de 21 Días)
-            </p>
+              <p className="text-lg md:text-xl text-gray-400 text-center italic">
+                (Y aún así mantienes acceso al Plan de 21 Días)
+              </p>
 
-            <div className="w-24 h-1 bg-green-500 mx-auto my-8"></div>
+              <div className="w-24 h-1 bg-green-500 mx-auto my-8"></div>
 
-            <div className="space-y-4 max-w-2xl mx-auto">
-              <div className="flex items-start gap-3">
-                <span className="text-2xl text-green-400">✓</span>
-                <p className="text-base md:text-lg text-gray-300">Prueba todos los 47 scripts de mensajes</p>
-              </div>
+              <div className="space-y-4 max-w-2xl mx-auto">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl text-green-400">✓</span>
+                  <p className="text-base md:text-lg text-gray-300">Prueba todos los 47 scripts de mensajes</p>
+                </div>
 
-              <div className="flex items-start gap-3">
-                <span className="text-2xl text-green-400">✓</span>
-                <p className="text-base md:text-lg text-gray-300">Usa el simulador de respuestas en tiempo real</p>
-              </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl text-green-400">✓</span>
+                  <p className="text-base md:text-lg text-gray-300">Usa el simulador de respuestas en tiempo real</p>
+                </div>
 
-              <div className="flex items-start gap-3">
-                <span className="text-2xl text-green-400">✓</span>
-                <p className="text-base md:text-lg text-gray-300">Escucha las 12 audio-guías de emergencia</p>
-              </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl text-green-400">✓</span>
+                  <p className="text-base md:text-lg text-gray-300">Escucha las 12 audio-guías de emergencia</p>
+                </div>
 
-              <div className="flex items-start gap-3">
-                <span className="text-2xl text-green-400">✓</span>
-                <p className="text-base md:text-lg text-gray-300">Si no te sirve, recuperas tu dinero en 24-48 horas</p>
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl text-green-400">✓</span>
+                  <p className="text-base md:text-lg text-gray-300">Si no te sirve, recuperas tu dinero en 24-48 horas</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {showPurchaseConfirmation && (
         <PurchaseConfirmation onClose={() => setShowPurchaseConfirmation(false)} />
