@@ -4,12 +4,12 @@ import './styles/animations.css';
 
 function App() {
   const [timeLeft, setTimeLeft] = useState(900);
-  const [unlockedIn, setUnlockedIn] = useState(180);
+  const [unlockedIn, setUnlockedIn] = useState(210); // ✅ ALTERADO: 180 → 210 segundos (3min30s)
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [vturbiLoaded, setVturbiLoaded] = useState(false);
   const { scrollProgress } = useScrollProgress();
-  const { spotsLeft, viewers, buyers } = useDynamicCounters(8, 35, 45); // Alterado para menos de 50
+  const { spotsLeft, viewers, buyers } = useDynamicCounters(8, 35, 45);
   const widgetRef = useRef(null);
 
   useEffect(() => {
@@ -47,7 +47,7 @@ function App() {
             });
           }, 1000);
 
-          console.log('📊 Tracking: 3 minutos atingidos');
+          console.log('📊 Tracking: 3 minutos e 30 segundos atingidos');
           clearInterval(unlockedTimer);
           return 0;
         }
@@ -126,8 +126,9 @@ function App() {
     setShowModal(true);
   };
 
+  // ✅ ALTERADO: Redirecionamento para o downsell
   const confirmDecline = () => {
-    alert('Redirecionando para área de membros...');
+    window.location.href = 'https://72hacelerador.vercel.app/';
   };
 
   const backToOffer = () => {
@@ -200,7 +201,7 @@ function App() {
             </p>
           </div>
 
-          {/* VTURB PLAYER - CORRIGIDO */}
+          {/* VTURB PLAYER */}
           <div className="w-full bg-black rounded-lg overflow-hidden shadow-lg shadow-green-500/20 mb-4 border border-green-500/30" style={{ aspectRatio: '16/9' }}>
             <div id="vturb-container" style={{ width: '100%', height: '100%' }}>
               <vturb-smartplayer 
@@ -399,10 +400,10 @@ function App() {
 
       </main>
 
-      {/* MODAL */}
+      {/* MODAL - ✅ CORRIGIDO COM MAX-HEIGHT E OVERFLOW */}
       {showModal && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-gradient-to-br from-yellow-900 via-yellow-800 to-black border-3 border-yellow-500 rounded-2xl p-6 w-full max-w-sm shadow-2xl shadow-yellow-500/50 animate-fade-in">
+          <div className="bg-gradient-to-br from-yellow-900 via-yellow-800 to-black border-3 border-yellow-500 rounded-2xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto shadow-2xl shadow-yellow-500/50 animate-fade-in">
             
             <div className="text-4xl text-center mb-4">🤔</div>
 
