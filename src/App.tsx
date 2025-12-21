@@ -3,26 +3,20 @@ import { useScrollProgress, useDynamicCounters } from './hooks/useGamification';
 import './styles/animations.css';
 
 function App() {
-  const [timeLeft, setTimeLeft] = useState(900); // Timer principal (15 min)
-  const [unlockedIn, setUnlockedIn] = useState(180); // Timer de desbloqueio (3 min)
+  const [timeLeft, setTimeLeft] = useState(900);
+  const [unlockedIn, setUnlockedIn] = useState(180);
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [unlockNotificationShown, setUnlockNotificationShown] = useState(false);
+  const [vturbiLoaded, setVturbiLoaded] = useState(false);
   const { scrollProgress } = useScrollProgress();
-  const { spotsLeft, viewers, buyers } = useDynamicCounters(12, 200, 80);
+  const { spotsLeft, viewers, buyers } = useDynamicCounters(8, 35, 45); // Alterado para menos de 50
   const widgetRef = useRef(null);
-
-  const [userData] = useState({
-    timeSeparation: '1-4 SEMANAS',
-    currentSituation: 'ME IGNORA',
-    commitmentLevel: 'LO QUIERO MUCHO'
-  });
 
   useEffect(() => {
     console.log('📊 Tracking: Página de upsell carregada');
   }, []);
 
-  // Timer principal (15 minutos)
+  // Timer principal
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft(prev => {
@@ -37,21 +31,15 @@ function App() {
     return () => clearInterval(timer);
   }, []);
 
-  // Timer de desbloqueio (3 minutos)
+  // Timer de desbloqueio
   useEffect(() => {
     const unlockedTimer = setInterval(() => {
       setUnlockedIn(prev => {
         if (prev <= 1) {
           setIsUnlocked(true);
-          setUnlockNotificationShown(true);
-          
-          // Toca som de notificação
           playUnlockSound();
-          
-          // Carrega widget Hotmart
           loadHotmartWidget();
           
-          // Scroll automático para o widget
           setTimeout(() => {
             widgetRef.current?.scrollIntoView({
               behavior: 'smooth',
@@ -59,7 +47,7 @@ function App() {
             });
           }, 1000);
 
-          console.log('📊 Tracking: 3 minutos atingidos - Seções desbloqueadas');
+          console.log('📊 Tracking: 3 minutos atingidos');
           clearInterval(unlockedTimer);
           return 0;
         }
@@ -70,17 +58,40 @@ function App() {
     return () => clearInterval(unlockedTimer);
   }, []);
 
-  const loadHotmartWidget = () => {
-    const script = document.createElement('script');
-    script.src = 'https://checkout.hotmart.com/lib/hotmart-checkout-elements.js';
-    script.async = true;
-    script.onload = () => {
-      if ((window as any).checkoutElements) {
-        (window as any).checkoutElements.init('salesFunnel').mount('#hotmart-sales-funnel');
-        console.log('✅ Hotmart Widget carregado');
+  // Carrega Vturb
+  useEffect(() => {
+    const loadVturb = () => {
+      if (!vturbiLoaded && !document.querySelector('script[src*="converteai"]')) {
+        const script = document.createElement('script');
+        script.src = 'https://scripts.converteai.net/ea3c2dc1-1976-40a2-b0fb-c5055f82bfaf/players/69479a3bb31bcf401dd8d6a2/v4/player.js';
+        script.async = true;
+        script.onload = () => {
+          setVturbiLoaded(true);
+          console.log('✅ Vturb carregado');
+        };
+        script.onerror = () => {
+          console.error('❌ Erro ao carregar Vturb');
+        };
+        document.head.appendChild(script);
       }
     };
-    document.body.appendChild(script);
+
+    loadVturb();
+  }, [vturbiLoaded]);
+
+  const loadHotmartWidget = () => {
+    if (!document.querySelector('script[src*="hotmart"]')) {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.hotmart.com/lib/hotmart-checkout-elements.js';
+      script.async = true;
+      script.onload = () => {
+        if ((window as any).checkoutElements) {
+          (window as any).checkoutElements.init('salesFunnel').mount('#hotmart-sales-funnel');
+          console.log('✅ Hotmart Widget carregado');
+        }
+      };
+      document.body.appendChild(script);
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -113,11 +124,9 @@ function App() {
 
   const handleDecline = () => {
     setShowModal(true);
-    console.log('📊 Tracking: Usuário clicou em recusar');
   };
 
   const confirmDecline = () => {
-    console.log('📊 Tracking: Upsell recusado definitivamente');
     alert('Redirecionando para área de membros...');
   };
 
@@ -132,10 +141,9 @@ function App() {
   return (
     <div className="w-full min-h-screen bg-black text-white overflow-x-hidden">
       
-      {/* HEADER STICKY */}
+      {/* HEADER */}
       <header className="sticky top-0 z-50 bg-black/95 backdrop-blur border-b border-green-500/30 p-3 w-full">
         <div className="flex flex-col gap-2">
-          {/* Linha 1 */}
           <div className="flex items-center justify-between gap-2">
             <span className="bg-green-500 text-black font-black text-xs px-2 py-1 rounded-full flex-shrink-0">
               ✅ CONFIRMADO
@@ -145,7 +153,6 @@ function App() {
             </div>
           </div>
           
-          {/* Linha 2 */}
           <div className="flex items-center gap-2 flex-wrap">
             <span className="bg-yellow-500 text-black font-black text-xs px-2 py-1 rounded-full flex-shrink-0">
               🎁 BONUS
@@ -160,7 +167,7 @@ function App() {
         </div>
       </header>
 
-      {/* BARRA DE PROGRESSO */}
+      {/* PROGRESS BAR */}
       <div className="fixed top-[70px] left-0 right-0 h-0.5 bg-gray-800 z-[40]">
         <div 
           className="h-full bg-gradient-to-r from-yellow-500 via-green-500 to-green-600 transition-all duration-300"
@@ -168,10 +175,10 @@ function App() {
         />
       </div>
 
-      {/* MAIN CONTENT */}
+      {/* MAIN */}
       <main className="w-full">
         
-        {/* SEÇÃO DO VÍDEO */}
+        {/* VIDEO SECTION */}
         <section className="w-full px-3 pt-6 pb-4">
           
           {/* HEADLINE */}
@@ -193,34 +200,35 @@ function App() {
             </p>
           </div>
 
-          {/* VTURB SMARTPLAYER */}
-          <div className="w-full bg-black rounded-lg overflow-hidden shadow-lg shadow-green-500/20 mb-4 border border-green-500/30">
-            <vturb-smartplayer 
-              id="vid-69479a3bb31bcf401dd8d6a2" 
-              style={{
-                display: 'block',
-                margin: '0 auto',
-                width: '100%',
-                height: 'auto'
-              }}>
-            </vturb-smartplayer>
+          {/* VTURB PLAYER - CORRIGIDO */}
+          <div className="w-full bg-black rounded-lg overflow-hidden shadow-lg shadow-green-500/20 mb-4 border border-green-500/30" style={{ aspectRatio: '16/9' }}>
+            <div id="vturb-container" style={{ width: '100%', height: '100%' }}>
+              <vturb-smartplayer 
+                id="vid-69479a3bb31bcf401dd8d6a2" 
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  height: '100%'
+                }}>
+              </vturb-smartplayer>
+            </div>
           </div>
 
-          {/* SCRIPT DO VTURB */}
-          <script type="text/javascript">
-            {`
-              (function() {
-                if (!document.querySelector('script[src*="converteai"]')) {
-                  var s = document.createElement("script");
-                  s.src = "https://scripts.converteai.net/ea3c2dc1-1976-40a2-b0fb-c5055f82bfaf/players/69479a3bb31bcf401dd8d6a2/v4/player.js";
-                  s.async = true;
-                  document.head.appendChild(s);
-                }
-              })();
-            `}
-          </script>
+          {/* VTURB SCRIPT */}
+          <script type="text/javascript" dangerouslySetInnerHTML={{__html: `
+            (function() {
+              if (!window.vturb_loaded) {
+                window.vturb_loaded = true;
+                var s = document.createElement("script");
+                s.src = "https://scripts.converteai.net/ea3c2dc1-1976-40a2-b0fb-c5055f82bfaf/players/69479a3bb31bcf401dd8d6a2/v4/player.js";
+                s.async = true;
+                s.type = "text/javascript";
+                document.head.appendChild(s);
+              }
+            })();
+          `}} />
 
-          {/* TIMER DE DESBLOQUEIO */}
+          {/* TIMER */}
           <div className="bg-gradient-to-r from-orange-900/40 to-yellow-900/40 border-2 border-orange-500 rounded-lg p-4 text-center mb-6">
             <p className="text-xs text-gray-300 mb-2">
               Faltam para desbloquear:
@@ -235,7 +243,7 @@ function App() {
 
         </section>
 
-        {/* NOTIFICAÇÃO DE DESBLOQUEIO */}
+        {/* UNLOCK NOTIFICATION */}
         {isUnlocked && (
           <section className="w-full px-3 py-4 animate-fade-in">
             <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg p-4 text-center shadow-lg shadow-green-500/50">
@@ -250,7 +258,7 @@ function App() {
           </section>
         )}
 
-        {/* WIDGET HOTMART - APARECE APÓS 3 MINUTOS */}
+        {/* HOTMART WIDGET */}
         {isUnlocked && (
           <section className="w-full px-3 py-6 bg-gradient-to-b from-black to-yellow-950/20 animate-fade-in" ref={widgetRef}>
             <h2 className="text-lg font-black text-white mb-4 text-center leading-tight">
@@ -305,7 +313,7 @@ function App() {
           </section>
         )}
 
-        {/* SEÇÃO DE PREÇO - APARECE APÓS 3 MINUTOS */}
+        {/* PRICE SECTION */}
         {isUnlocked && (
           <section className="w-full px-3 py-6 bg-gradient-to-b from-black to-yellow-950/30 animate-fade-in">
             <div className="text-center">
@@ -338,7 +346,7 @@ function App() {
           </section>
         )}
 
-        {/* SEÇÃO DE GARANTIA - APARECE APÓS 3 MINUTOS */}
+        {/* GUARANTEE SECTION */}
         {isUnlocked && (
           <section className="w-full px-3 py-6 bg-gradient-to-b from-black to-green-950/20 animate-fade-in">
             <span className="bg-green-500 text-black font-black text-xs px-3 py-1 rounded-full inline-block mb-4 shadow-lg shadow-green-500/50">
@@ -391,7 +399,7 @@ function App() {
 
       </main>
 
-      {/* MODAL DE RECUSA */}
+      {/* MODAL */}
       {showModal && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
           <div className="bg-gradient-to-br from-yellow-900 via-yellow-800 to-black border-3 border-yellow-500 rounded-2xl p-6 w-full max-w-sm shadow-2xl shadow-yellow-500/50 animate-fade-in">
@@ -407,10 +415,9 @@ function App() {
             </p>
 
             <div className="space-y-2 mb-6">
-              
               <div className="flex items-start gap-2 bg-black/40 p-3 rounded">
                 <span className="text-lg text-yellow-400 flex-shrink-0">💰</span>
-                <p className="text-xs text-white">70% de descuento ($50 de ahorro)</p>
+                <p className="text-xs text-white">70% de descuento ($50)</p>
               </div>
 
               <div className="flex items-start gap-2 bg-black/40 p-3 rounded">
@@ -425,20 +432,18 @@ function App() {
 
               <div className="flex items-start gap-2 bg-black/40 p-3 rounded">
                 <span className="text-lg text-yellow-400 flex-shrink-0">🎧</span>
-                <p className="text-xs text-white">12 audio-guías de emergencia</p>
+                <p className="text-xs text-white">12 audio-guías</p>
               </div>
 
               <div className="flex items-start gap-2 bg-black/40 p-3 rounded">
                 <span className="text-lg text-yellow-400 flex-shrink-0">⚡</span>
                 <p className="text-xs text-white">Reduce tiempo a la mitad</p>
               </div>
-              
             </div>
 
             <div className="w-full h-px bg-yellow-500/30 mb-6"></div>
 
             <div className="flex flex-col gap-2">
-              
               <button
                 onClick={backToOffer}
                 className="w-full bg-green-500 hover:bg-green-600 text-black font-black text-sm py-3 px-4 rounded-lg transition-all active:scale-95 shadow-lg shadow-green-500/50"
@@ -452,9 +457,7 @@ function App() {
               >
                 No, continuar sin Acelerador
               </button>
-              
             </div>
-            
           </div>
         </div>
       )}
@@ -485,6 +488,12 @@ function App() {
 
         * {
           -webkit-tap-highlight-color: transparent;
+        }
+
+        vturb-smartplayer {
+          display: block;
+          width: 100%;
+          height: 100%;
         }
       `}</style>
     </div>
