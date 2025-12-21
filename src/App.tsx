@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import PurchaseConfirmation from './components/PurchaseConfirmation';
 import { useScrollProgress, useDynamicCounters } from './hooks/useGamification';
 import './styles/animations.css';
 
@@ -8,8 +7,6 @@ function App() {
   const [unlockedIn, setUnlockedIn] = useState(180); // Timer de desbloqueio (3 min)
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [showSticky, setShowSticky] = useState(false);
-  const [showPurchaseConfirmation, setShowPurchaseConfirmation] = useState(false);
   const [unlockNotificationShown, setUnlockNotificationShown] = useState(false);
   const { scrollProgress } = useScrollProgress();
   const { spotsLeft, viewers, buyers } = useDynamicCounters(12, 200, 80);
@@ -23,8 +20,7 @@ function App() {
 
   useEffect(() => {
     console.log('📊 Tracking: Página de upsell carregada');
-    console.log('📊 Dados do usuário:', userData);
-  }, [userData]);
+  }, []);
 
   // Timer principal (15 minutos)
   useEffect(() => {
@@ -52,13 +48,16 @@ function App() {
           // Toca som de notificação
           playUnlockSound();
           
+          // Carrega widget Hotmart
+          loadHotmartWidget();
+          
           // Scroll automático para o widget
           setTimeout(() => {
-            (widgetRef.current as any)?.scrollIntoView({
+            widgetRef.current?.scrollIntoView({
               behavior: 'smooth',
-              block: 'center'
+              block: 'start'
             });
-          }, 500);
+          }, 1000);
 
           console.log('📊 Tracking: 3 minutos atingidos - Seções desbloqueadas');
           clearInterval(unlockedTimer);
@@ -71,36 +70,18 @@ function App() {
     return () => clearInterval(unlockedTimer);
   }, []);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowSticky(window.scrollY > 1000);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
+  const loadHotmartWidget = () => {
     const script = document.createElement('script');
     script.src = 'https://checkout.hotmart.com/lib/hotmart-checkout-elements.js';
     script.async = true;
     script.onload = () => {
-      if ((window as any).checkoutElements && isUnlocked) {
+      if ((window as any).checkoutElements) {
         (window as any).checkoutElements.init('salesFunnel').mount('#hotmart-sales-funnel');
-        console.log('✅ Hotmart Widget carregado com sucesso');
+        console.log('✅ Hotmart Widget carregado');
       }
-    };
-    script.onerror = () => {
-      console.error('❌ Erro ao carregar Hotmart Widget');
     };
     document.body.appendChild(script);
-
-    return () => {
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
-      }
-    };
-  }, [isUnlocked]);
+  };
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -130,14 +111,6 @@ function App() {
     }
   };
 
-  const scrollToWidget = () => {
-    console.log('📊 Tracking: Scroll para widget');
-    document.getElementById('hotmart-sales-funnel')?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'center'
-    });
-  };
-
   const handleDecline = () => {
     setShowModal(true);
     console.log('📊 Tracking: Usuário clicou em recusar');
@@ -150,335 +123,332 @@ function App() {
 
   const backToOffer = () => {
     setShowModal(false);
-    scrollToWidget();
+    widgetRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
   };
 
   return (
-    <div className="bg-black min-h-screen text-white overflow-x-hidden">
-      <header className="sticky top-0 z-50 bg-black/95 backdrop-blur border-b border-green-500/30 p-4">
-        <div className="flex flex-col gap-2 max-w-7xl mx-auto">
-          <div className="flex items-center justify-between">
-            <span className="bg-green-500 text-black font-black text-xs md:text-sm px-3 py-1.5 rounded-full flex items-center gap-1.5">
-              ✅ PLAN 21 DÍAS CONFIRMADO
+    <div className="w-full min-h-screen bg-black text-white overflow-x-hidden">
+      
+      {/* HEADER STICKY */}
+      <header className="sticky top-0 z-50 bg-black/95 backdrop-blur border-b border-green-500/30 p-3 w-full">
+        <div className="flex flex-col gap-2">
+          {/* Linha 1 */}
+          <div className="flex items-center justify-between gap-2">
+            <span className="bg-green-500 text-black font-black text-xs px-2 py-1 rounded-full flex-shrink-0">
+              ✅ CONFIRMADO
             </span>
-            <div className="text-yellow-400 font-black text-lg md:text-2xl">
+            <div className="text-yellow-400 font-black text-base">
               ⏰ {formatTime(timeLeft)}
             </div>
           </div>
           
-          <div className="flex items-center gap-3 flex-wrap">
-            <span className="bg-yellow-500 text-black font-black text-xs md:text-sm px-3 py-1.5 rounded-full">
-              🎁 BONUS EXCLUSIVO DESBLOQUEADO
+          {/* Linha 2 */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="bg-yellow-500 text-black font-black text-xs px-2 py-1 rounded-full flex-shrink-0">
+              🎁 BONUS
             </span>
-            <span className="bg-green-500/20 text-green-300 font-bold text-xs px-3 py-1 rounded-full border border-green-500">
-              ✨ Solo para compradores del Plan 21 Días
+            <span className="bg-green-500/20 text-green-300 font-bold text-xs px-2 py-0.5 rounded-full border border-green-500 flex-shrink-0">
+              👥 {viewers} viendo
+            </span>
+            <span className="bg-red-500/20 text-red-300 font-bold text-xs px-2 py-0.5 rounded-full border border-red-500 flex-shrink-0">
+              🔥 {spotsLeft} spots
             </span>
           </div>
         </div>
       </header>
 
-      <div className="fixed top-0 left-0 right-0 h-1 bg-gray-800 z-[60]">
+      {/* BARRA DE PROGRESSO */}
+      <div className="fixed top-[70px] left-0 right-0 h-0.5 bg-gray-800 z-[40]">
         <div 
           className="h-full bg-gradient-to-r from-yellow-500 via-green-500 to-green-600 transition-all duration-300"
           style={{ width: `${scrollProgress}%` }}
         />
       </div>
 
-      {/* SEÇÃO DO VÍDEO */}
-      <section className="pt-24 pb-12 px-4 fade-in-up">
-        <div className="max-w-4xl mx-auto">
+      {/* MAIN CONTENT */}
+      <main className="w-full">
+        
+        {/* SEÇÃO DO VÍDEO */}
+        <section className="w-full px-3 pt-6 pb-4">
           
-          <div className="bg-gradient-to-r from-green-900/40 to-green-800/20 border-2 border-green-500 rounded-xl p-6 mb-8">
-            <h1 className="text-3xl md:text-4xl font-black text-white text-center leading-snug">
+          {/* HEADLINE */}
+          <div className="bg-gradient-to-r from-green-900/40 to-green-800/20 border-2 border-green-500 rounded-lg p-4 mb-4">
+            <h1 className="text-xl font-black text-white text-center leading-tight">
               ¡Felicitaciones! Acabas de asegurar tu Plan de 21 Días
             </h1>
           </div>
 
-          <div className="bg-gradient-to-r from-yellow-900/40 to-yellow-800/20 border-2 border-yellow-500 rounded-xl p-6 mb-12">
-            <p className="text-base md:text-lg text-yellow-200 font-semibold leading-relaxed text-center mb-4">
+          {/* COPY */}
+          <div className="bg-gradient-to-r from-yellow-900/40 to-yellow-800/20 border-2 border-yellow-500 rounded-lg p-4 mb-6">
+            <p className="text-sm text-yellow-200 font-semibold leading-relaxed text-center mb-3">
               Pero espera... En los próximos 2 minutos, verás exactamente por qué 
               el 89% de las reconquistas exitosas aceleran su proceso 
               a la MITAD usando algo que la mayoría NO conoce.
             </p>
-            <p className="text-lg md:text-xl text-yellow-300 font-bold text-center">
+            <p className="text-base text-yellow-300 font-bold text-center">
               ⏰ Mira hasta el final. Tu oferta exclusiva te está esperando.
             </p>
           </div>
 
           {/* VTURB SMARTPLAYER */}
-          <div className="bg-black rounded-2xl overflow-hidden shadow-2xl shadow-green-500/20 mb-8 border-2 border-green-500/30">
+          <div className="w-full bg-black rounded-lg overflow-hidden shadow-lg shadow-green-500/20 mb-4 border border-green-500/30">
             <vturb-smartplayer 
               id="vid-69479a3bb31bcf401dd8d6a2" 
               style={{
                 display: 'block',
                 margin: '0 auto',
-                width: '100%'
+                width: '100%',
+                height: 'auto'
               }}>
             </vturb-smartplayer>
-            <script type="text/javascript">
-              {`
-                var s=document.createElement("script");
-                s.src="https://scripts.converteai.net/ea3c2dc1-1976-40a2-b0fb-c5055f82bfaf/players/69479a3bb31bcf401dd8d6a2/v4/player.js";
-                s.async=!0;
-                document.head.appendChild(s);
-              `}
-            </script>
           </div>
 
-          {/* TIMER DE DESBLOQUEIO ABAIXO DO VÍDEO */}
-          <div className="bg-gradient-to-r from-orange-900/40 to-yellow-900/40 border-2 border-orange-500 rounded-xl p-6 mb-12 text-center">
-            <p className="text-base md:text-lg text-gray-300 mb-3">
-              Faltam para desbloquear a oferta exclusiva:
+          {/* SCRIPT DO VTURB */}
+          <script type="text/javascript">
+            {`
+              (function() {
+                if (!document.querySelector('script[src*="converteai"]')) {
+                  var s = document.createElement("script");
+                  s.src = "https://scripts.converteai.net/ea3c2dc1-1976-40a2-b0fb-c5055f82bfaf/players/69479a3bb31bcf401dd8d6a2/v4/player.js";
+                  s.async = true;
+                  document.head.appendChild(s);
+                }
+              })();
+            `}
+          </script>
+
+          {/* TIMER DE DESBLOQUEIO */}
+          <div className="bg-gradient-to-r from-orange-900/40 to-yellow-900/40 border-2 border-orange-500 rounded-lg p-4 text-center mb-6">
+            <p className="text-xs text-gray-300 mb-2">
+              Faltam para desbloquear:
             </p>
-            <div className="text-4xl md:text-5xl font-black text-orange-400">
+            <div className="text-3xl font-black text-orange-400">
               {formatTime(unlockedIn)}
             </div>
-            <p className="text-sm md:text-base text-orange-300 mt-3">
-              Assista o vídeo até o final para desbloquear sua oferta exclusiva
+            <p className="text-xs text-orange-300 mt-2">
+              Assista o vídeo até o final
             </p>
           </div>
 
-        </div>
-      </section>
+        </section>
 
-      {/* NOTIFICAÇÃO DE DESBLOQUEIO */}
-      {isUnlocked && (
-        <div className="mb-12 px-4 animate-fade-in">
-          <div className="max-w-4xl mx-auto bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl p-6 md:p-8 shadow-2xl shadow-green-500/50 text-center">
-            <div className="text-5xl md:text-6xl mb-4">🎉</div>
-            <h2 className="text-2xl md:text-3xl font-black text-black mb-2">
-              ✅ OFERTA DESBLOQUEADA!
-            </h2>
-            <p className="text-lg md:text-xl text-black/90 font-semibold">
-              Tu oferta exclusiva está lista. Desplázate hacia abajo para completar tu compra.
-            </p>
-          </div>
-        </div>
-      )}
+        {/* NOTIFICAÇÃO DE DESBLOQUEIO */}
+        {isUnlocked && (
+          <section className="w-full px-3 py-4 animate-fade-in">
+            <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg p-4 text-center shadow-lg shadow-green-500/50">
+              <div className="text-4xl mb-2">🎉</div>
+              <h2 className="text-lg font-black text-black mb-1">
+                ✅ OFERTA DESBLOQUEADA!
+              </h2>
+              <p className="text-sm text-black/90 font-semibold">
+                Tu oferta exclusiva está lista.
+              </p>
+            </div>
+          </section>
+        )}
 
-      {/* WIDGET HOTMART - APARECE APÓS 3 MINUTOS */}
-      {isUnlocked && (
-        <section className="px-4 py-16 bg-gradient-to-b from-black to-yellow-950/30 fade-in-up" ref={widgetRef}>
-          <div className="max-w-3xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-black text-white mb-8 text-center leading-tight">
+        {/* WIDGET HOTMART - APARECE APÓS 3 MINUTOS */}
+        {isUnlocked && (
+          <section className="w-full px-3 py-6 bg-gradient-to-b from-black to-yellow-950/20 animate-fade-in" ref={widgetRef}>
+            <h2 className="text-lg font-black text-white mb-4 text-center leading-tight">
               Accede al Acelerador 72H AHORA:
             </h2>
 
-            <p className="text-lg md:text-xl text-yellow-200 mb-8 text-center font-semibold">
-              ✨ Compra en 1 clic (sin rellenar datos de nuevo)
+            <p className="text-sm text-yellow-200 mb-6 text-center font-semibold">
+              ✨ Compra en 1 clic
             </p>
 
-            <div className="bg-gradient-to-br from-green-900/20 to-green-800/10 border-4 border-green-500 rounded-3xl p-8 md:p-12 shadow-2xl shadow-green-500/30 mb-8 hover-glow animate-fade-in">
-              <div id="hotmart-sales-funnel" className="min-h-[200px] flex items-center justify-center">
-                <p className="text-gray-400 text-center">Cargando checkout seguro...</p>
+            <div className="bg-gradient-to-br from-green-900/20 to-green-800/10 border-3 border-green-500 rounded-2xl p-6 shadow-lg shadow-green-500/20 mb-6">
+              <div id="hotmart-sales-funnel" className="min-h-[300px] flex items-center justify-center">
+                <p className="text-gray-400 text-center text-sm">Cargando checkout...</p>
               </div>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-4 mt-8">
-              <div className="bg-white/5 rounded-xl p-4 text-center hover-scale">
-                <div className="text-3xl mb-2">🔒</div>
-                <p className="text-sm md:text-base text-gray-300 font-semibold">Pago 100% Seguro</p>
+            <div className="grid grid-cols-3 gap-2 mb-6">
+              <div className="bg-white/5 rounded-lg p-3 text-center">
+                <div className="text-2xl mb-1">🔒</div>
+                <p className="text-xs text-gray-300 font-semibold">Seguro</p>
               </div>
 
-              <div className="bg-white/5 rounded-xl p-4 text-center hover-scale">
-                <div className="text-3xl mb-2">⚡</div>
-                <p className="text-sm md:text-base text-gray-300 font-semibold">Acceso Inmediato</p>
+              <div className="bg-white/5 rounded-lg p-3 text-center">
+                <div className="text-2xl mb-1">⚡</div>
+                <p className="text-xs text-gray-300 font-semibold">Inmediato</p>
               </div>
 
-              <div className="bg-white/5 rounded-xl p-4 text-center hover-scale">
-                <div className="text-3xl mb-2">🛡️</div>
-                <p className="text-sm md:text-base text-gray-300 font-semibold">Garantía 30 Días</p>
+              <div className="bg-white/5 rounded-lg p-3 text-center">
+                <div className="text-2xl mb-1">🛡️</div>
+                <p className="text-xs text-gray-300 font-semibold">Garantía</p>
               </div>
             </div>
 
-            <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent my-12"></div>
+            <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent mb-6"></div>
 
             <div className="text-center">
-              <p className="text-base text-gray-400 mb-4">
+              <p className="text-xs text-gray-400 mb-3">
                 ¿Prefieres continuar sin el Acelerador?
               </p>
 
               <button
                 onClick={handleDecline}
-                className="bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold text-base md:text-lg py-4 px-8 rounded-xl border-2 border-gray-600 transition-all duration-300 inline-block hover-scale"
+                className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold text-sm py-3 px-4 rounded-lg border border-gray-600 transition-all active:scale-95"
               >
-                ❌ No, prefiero continuar sin el Acelerador
+                ❌ No, continuar sin Acelerador
               </button>
 
-              <p className="text-sm text-yellow-400 mt-4 font-semibold">
-                ℹ️ Nota: Esta oferta exclusiva solo está disponible en esta página para compradores del Plan 21 Días.
+              <p className="text-xs text-yellow-400 mt-3 font-semibold">
+                ℹ️ Oferta exclusiva solo en esta página
               </p>
             </div>
-          </div>
-        </section>
-      )}
+          </section>
+        )}
 
-      {/* SEÇÃO DE PREÇO - APARECE APÓS 3 MINUTOS */}
-      {isUnlocked && (
-        <section className="px-4 py-16 bg-gradient-to-b from-black to-yellow-950/30 fade-in-up">
-          <div className="max-w-3xl mx-auto text-center">
-            <div className="text-4xl md:text-5xl text-gray-500 line-through mb-4 font-bold">
-              $67
-            </div>
+        {/* SEÇÃO DE PREÇO - APARECE APÓS 3 MINUTOS */}
+        {isUnlocked && (
+          <section className="w-full px-3 py-6 bg-gradient-to-b from-black to-yellow-950/30 animate-fade-in">
+            <div className="text-center">
+              <div className="text-2xl text-gray-500 line-through mb-2 font-bold">
+                $67
+              </div>
 
-            <div className="bg-red-500 text-white font-black text-xl md:text-2xl px-8 py-3 rounded-full inline-block mb-6 shadow-lg shadow-red-500/50 animate-pulse-custom">
-              🔥 70% DE DESCUENTO
-            </div>
+              <div className="bg-red-500 text-white font-black text-xs px-3 py-1 rounded-full inline-block mb-4 shadow-lg shadow-red-500/50">
+                🔥 70% OFF
+              </div>
 
-            <div className="text-7xl md:text-8xl lg:text-9xl font-black text-yellow-400 mb-6 drop-shadow-2xl pulse-soft">
-              $17
-            </div>
+              <div className="text-5xl font-black text-yellow-400 mb-3 drop-shadow-lg">
+                $17
+              </div>
 
-            <p className="text-xl md:text-2xl text-yellow-200 font-semibold mb-8">
-              Pago único. Acceso de por vida.
-            </p>
-
-            <div className="bg-gradient-to-r from-red-900/40 to-orange-900/40 border-2 border-red-500 rounded-2xl p-6 mb-8">
-              <p className="text-lg md:text-xl text-red-200 font-bold leading-relaxed">
-                ⏰ Solo en esta página. Solo en los próximos {formatTime(timeLeft)} minutos
+              <p className="text-sm text-yellow-200 font-semibold mb-4">
+                Pago único. Acceso de por vida.
               </p>
+
+              <div className="bg-gradient-to-r from-red-900/40 to-orange-900/40 border-2 border-red-500 rounded-lg p-3 mb-4">
+                <p className="text-xs text-red-200 font-bold">
+                  ⏰ Solo en los próximos {formatTime(timeLeft)} minutos
+                </p>
+              </div>
+
+              <div className="text-lg font-black text-green-400">
+                Ahorras $50
+              </div>
             </div>
+          </section>
+        )}
 
-            <div className="text-2xl md:text-3xl font-black text-green-400">
-              Ahorras $50 AHORA
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* CONTADOR DE ATIVIDADE */}
-      <div className="fixed bottom-24 right-4 bg-black/90 backdrop-blur-lg border-2 border-green-500 rounded-xl p-4 z-40 shadow-2xl hidden md:block fade-in-up">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-          <span className="text-white font-bold text-sm">Actividad en vivo</span>
-        </div>
-        <div className="space-y-2 text-xs">
-          <div className="text-gray-300">
-            👥 <span className="text-white font-semibold">{viewers}</span> personas viendo
-          </div>
-          <div className="text-gray-300">
-            ✅ <span className="text-green-400 font-semibold">{buyers}</span> compraron hoy
-          </div>
-          <div className="text-gray-300">
-            🔥 <span className="text-red-400 font-semibold">{spotsLeft}</span> spots restantes
-          </div>
-        </div>
-      </div>
-
-      {/* SEÇÃO DE GARANTIA - APARECE APÓS 3 MINUTOS */}
-      {isUnlocked && (
-        <section className="px-4 py-16 bg-gradient-to-b from-black to-green-950/20 fade-in-up">
-          <div className="max-w-4xl mx-auto">
-            <span className="bg-green-500 text-black font-black text-xl md:text-2xl px-8 py-4 rounded-full inline-block mb-10 shadow-lg shadow-green-500/50">
-              🛡️ GARANTÍA DE 30 DÍAS
+        {/* SEÇÃO DE GARANTIA - APARECE APÓS 3 MINUTOS */}
+        {isUnlocked && (
+          <section className="w-full px-3 py-6 bg-gradient-to-b from-black to-green-950/20 animate-fade-in">
+            <span className="bg-green-500 text-black font-black text-xs px-3 py-1 rounded-full inline-block mb-4 shadow-lg shadow-green-500/50">
+              🛡️ GARANTÍA 30 DÍAS
             </span>
 
-            <h2 className="text-3xl md:text-4xl font-black text-white mb-8 text-center leading-tight">
-              Prueba el Acelerador sin ningún riesgo
+            <h2 className="text-base font-black text-white mb-4 text-center leading-tight">
+              Prueba sin riesgo
             </h2>
 
-            <div className="bg-gradient-to-br from-green-900/30 to-green-800/20 border-2 border-green-500 rounded-3xl p-8 md:p-12">
-              <p className="text-xl md:text-2xl text-gray-300 mb-6 leading-relaxed text-center">
-                Si en 30 días sientes que el Acelerador no te dio las respuestas exactas que necesitabas, te devuelvo el 100% del valor del Acelerador.
+            <div className="bg-gradient-to-br from-green-900/30 to-green-800/20 border-2 border-green-500 rounded-lg p-4">
+              <p className="text-sm text-gray-300 mb-3 leading-relaxed text-center">
+                Si en 30 días no estás satisfecho, te devuelvo el 100% de tu dinero.
               </p>
 
-              <p className="text-2xl md:text-3xl font-black text-green-400 mb-6 text-center">
-                Sin preguntas. Sin complicaciones.
+              <p className="text-base font-black text-green-400 mb-3 text-center">
+                Sin preguntas.
               </p>
 
-              <p className="text-lg md:text-xl text-gray-400 text-center italic">
-                (Y aún así mantienes acceso al Plan de 21 Días)
+              <p className="text-xs text-gray-400 text-center italic mb-4">
+                (Y mantienes acceso al Plan de 21 Días)
               </p>
 
-              <div className="w-24 h-1 bg-green-500 mx-auto my-8"></div>
+              <div className="w-12 h-0.5 bg-green-500 mx-auto my-3"></div>
 
-              <div className="space-y-4 max-w-2xl mx-auto">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl text-green-400">✓</span>
-                  <p className="text-base md:text-lg text-gray-300">Prueba todos los 47 scripts de mensajes</p>
+              <div className="space-y-2">
+                <div className="flex items-start gap-2">
+                  <span className="text-lg text-green-400 flex-shrink-0">✓</span>
+                  <p className="text-xs text-gray-300">47 scripts de mensajes</p>
                 </div>
 
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl text-green-400">✓</span>
-                  <p className="text-base md:text-lg text-gray-300">Usa el simulador de respuestas en tiempo real</p>
+                <div className="flex items-start gap-2">
+                  <span className="text-lg text-green-400 flex-shrink-0">✓</span>
+                  <p className="text-xs text-gray-300">Simulador en tiempo real</p>
                 </div>
 
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl text-green-400">✓</span>
-                  <p className="text-base md:text-lg text-gray-300">Escucha las 12 audio-guías de emergencia</p>
+                <div className="flex items-start gap-2">
+                  <span className="text-lg text-green-400 flex-shrink-0">✓</span>
+                  <p className="text-xs text-gray-300">12 audio-guías de emergencia</p>
                 </div>
 
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl text-green-400">✓</span>
-                  <p className="text-base md:text-lg text-gray-300">Si no te sirve, recuperas tu dinero en 24-48 horas</p>
+                <div className="flex items-start gap-2">
+                  <span className="text-lg text-green-400 flex-shrink-0">✓</span>
+                  <p className="text-xs text-gray-300">Dinero de vuelta en 24-48h</p>
                 </div>
               </div>
             </div>
-          </div>
-        </section>
-      )}
+          </section>
+        )}
 
-      {showPurchaseConfirmation && (
-        <PurchaseConfirmation onClose={() => setShowPurchaseConfirmation(false)} />
-      )}
+      </main>
 
+      {/* MODAL DE RECUSA */}
       {showModal && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-gradient-to-br from-yellow-900 via-yellow-800 to-black border-4 border-yellow-500 rounded-3xl p-8 md:p-12 max-w-2xl w-full shadow-2xl shadow-yellow-500/50 animate-fade-in">
+          <div className="bg-gradient-to-br from-yellow-900 via-yellow-800 to-black border-3 border-yellow-500 rounded-2xl p-6 w-full max-w-sm shadow-2xl shadow-yellow-500/50 animate-fade-in">
             
-            <div className="text-7xl md:text-8xl text-center mb-6">🤔</div>
+            <div className="text-4xl text-center mb-4">🤔</div>
 
-            <h2 className="text-3xl md:text-4xl font-black text-white mb-6 text-center leading-tight">
+            <h2 className="text-lg font-black text-white mb-4 text-center leading-tight">
               Solo para confirmar...
             </h2>
 
-            <p className="text-lg md:text-xl text-yellow-200 mb-8 text-center leading-relaxed">
-              ¿Prefieres seguir solo con el Plan de 21 Días y renunciar a estos beneficios exclusivos?
+            <p className="text-sm text-yellow-200 mb-6 text-center leading-relaxed">
+              ¿Prefieres seguir solo con el Plan de 21 Días?
             </p>
 
-            <div className="space-y-3 mb-8 max-w-lg mx-auto">
+            <div className="space-y-2 mb-6">
               
-              <div className="flex items-start gap-3 bg-black/40 p-4 rounded-lg">
-                <span className="text-2xl text-yellow-400">💰</span>
-                <p className="text-base md:text-lg text-white">70% de descuento ($50 de ahorro) - solo aquí</p>
+              <div className="flex items-start gap-2 bg-black/40 p-3 rounded">
+                <span className="text-lg text-yellow-400 flex-shrink-0">💰</span>
+                <p className="text-xs text-white">70% de descuento ($50 de ahorro)</p>
               </div>
 
-              <div className="flex items-start gap-3 bg-black/40 p-4 rounded-lg">
-                <span className="text-2xl text-yellow-400">💬</span>
-                <p className="text-base md:text-lg text-white">47 scripts de mensajes probados en 12.847 casos</p>
+              <div className="flex items-start gap-2 bg-black/40 p-3 rounded">
+                <span className="text-lg text-yellow-400 flex-shrink-0">💬</span>
+                <p className="text-xs text-white">47 scripts probados</p>
               </div>
 
-              <div className="flex items-start gap-3 bg-black/40 p-4 rounded-lg">
-                <span className="text-2xl text-yellow-400">🎯</span>
-                <p className="text-base md:text-lg text-white">Simulador de respuestas en tiempo real</p>
+              <div className="flex items-start gap-2 bg-black/40 p-3 rounded">
+                <span className="text-lg text-yellow-400 flex-shrink-0">🎯</span>
+                <p className="text-xs text-white">Simulador en tiempo real</p>
               </div>
 
-              <div className="flex items-start gap-3 bg-black/40 p-4 rounded-lg">
-                <span className="text-2xl text-yellow-400">🎧</span>
-                <p className="text-base md:text-lg text-white">12 audio-guías de emergencia</p>
+              <div className="flex items-start gap-2 bg-black/40 p-3 rounded">
+                <span className="text-lg text-yellow-400 flex-shrink-0">🎧</span>
+                <p className="text-xs text-white">12 audio-guías de emergencia</p>
               </div>
 
-              <div className="flex items-start gap-3 bg-black/40 p-4 rounded-lg">
-                <span className="text-2xl text-yellow-400">⚡</span>
-                <p className="text-base md:text-lg text-white">Reducir tiempo de reconquista a la mitad (9-14 días)</p>
+              <div className="flex items-start gap-2 bg-black/40 p-3 rounded">
+                <span className="text-lg text-yellow-400 flex-shrink-0">⚡</span>
+                <p className="text-xs text-white">Reduce tiempo a la mitad</p>
               </div>
               
             </div>
 
-            <div className="w-full h-px bg-yellow-500/30 my-8"></div>
+            <div className="w-full h-px bg-yellow-500/30 mb-6"></div>
 
-            <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex flex-col gap-2">
               
               <button
                 onClick={backToOffer}
-                className="flex-1 bg-green-500 hover:bg-green-600 text-black font-black text-lg md:text-xl py-5 px-8 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg shadow-green-500/50 ripple-effect"
+                className="w-full bg-green-500 hover:bg-green-600 text-black font-black text-sm py-3 px-4 rounded-lg transition-all active:scale-95 shadow-lg shadow-green-500/50"
               >
-                ✅ Sí, quiero el Acelerador 72H
+                ✅ Sí, quiero el Acelerador
               </button>
 
               <button
                 onClick={confirmDecline}
-                className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold text-base md:text-lg py-5 px-8 rounded-xl border-2 border-gray-600 transition-all"
+                className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold text-sm py-3 px-4 rounded-lg border border-gray-600 transition-all active:scale-95"
               >
                 No, continuar sin Acelerador
               </button>
@@ -489,50 +459,11 @@ function App() {
         </div>
       )}
 
-      {showSticky && (
-        <div className="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-lg border-t-4 border-yellow-500 p-4 z-50 shadow-2xl">
-          <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-4 flex-wrap justify-center md:justify-start">
-              <div className="text-yellow-400 font-black text-xl md:text-2xl">
-                ⏰ {formatTime(timeLeft)}
-              </div>
-              <div className="hidden md:block w-px h-8 bg-gray-700"></div>
-              <div className="flex items-center gap-2">
-                <span className="text-yellow-400 font-black text-2xl md:text-3xl">$17</span>
-                <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">-70%</span>
-              </div>
-            </div>
-
-            <button
-              onClick={scrollToWidget}
-              className="bg-green-500 hover:bg-green-600 text-black font-black text-base md:text-xl py-4 px-8 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg shadow-green-500/50 w-full md:w-auto hover-glow ripple-effect"
-            >
-              ✅ QUIERO EL ACELERADOR AHORA
-            </button>
-          </div>
-        </div>
-      )}
-
       <style>{`
-        @keyframes pulse-custom {
-          0%, 100% {
-            opacity: 1;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.8;
-            transform: scale(1.05);
-          }
-        }
-
-        .animate-pulse-custom {
-          animation: pulse-custom 2s infinite;
-        }
-
         @keyframes fadeIn {
           from {
             opacity: 0;
-            transform: translateY(30px);
+            transform: translateY(20px);
           }
           to {
             opacity: 1;
@@ -540,23 +471,8 @@ function App() {
           }
         }
 
-        .fade-in {
-          animation: fadeIn 0.8s ease-out;
-        }
-
-        @keyframes animate-fade-in {
-          from {
-            opacity: 0;
-            transform: scale(0.95);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-
         .animate-fade-in {
-          animation: animate-fade-in 0.3s ease-out;
+          animation: fadeIn 0.4s ease-out;
         }
 
         html {
@@ -565,6 +481,10 @@ function App() {
 
         body {
           overflow-x: hidden;
+        }
+
+        * {
+          -webkit-tap-highlight-color: transparent;
         }
       `}</style>
     </div>
