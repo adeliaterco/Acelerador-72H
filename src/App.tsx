@@ -63,7 +63,7 @@ function App() {
     const loadVturb = () => {
       if (!vturbiLoaded && !document.querySelector('script[src*="converteai"]')) {
         const script = document.createElement('script');
-        script.src = 'https://scripts.converteai.net/ea3c2dc1-1976-40a2-b0fb-c5055f82bfaf/players/69479a3bb31bcf401dd8d6a2/v4/player.js';
+        script.src = 'https://scripts.converteai.net/d1055f81-b10e-4e76-a928-5438e4f7acf6/players/694bc6b2ba8707e946b87c3d/v4/player.js';
         script.async = true;
         script.onload = () => {
           setVturbiLoaded(true);
@@ -205,7 +205,7 @@ function App() {
           <div className="w-full bg-black rounded-lg overflow-hidden shadow-lg shadow-green-500/20 mb-4 border border-green-500/30" style={{ aspectRatio: '16/9' }}>
             <div id="vturb-container" style={{ width: '100%', height: '100%' }}>
               <vturb-smartplayer 
-                id="vid-69479a3bb31bcf401dd8d6a2" 
+                id="vid-694bc6b2ba8707e946b87c3d" 
                 style={{
                   display: 'block',
                   width: '100%',
@@ -221,7 +221,7 @@ function App() {
               if (!window.vturb_loaded) {
                 window.vturb_loaded = true;
                 var s = document.createElement("script");
-                s.src = "https://scripts.converteai.net/ea3c2dc1-1976-40a2-b0fb-c5055f82bfaf/players/69479a3bb31bcf401dd8d6a2/v4/player.js";
+                s.src = "https://scripts.converteai.net/ea3c2dc1-1976-40a2-b0fb-c5055f82bfaf/players/694bc6b2ba8707e946b87c3d/v4/player.js";
                 s.async = true;
                 s.type = "text/javascript";
                 document.head.appendChild(s);
